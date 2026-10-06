@@ -27,6 +27,6 @@ router.get("/me", protect, me);
 router.get("/verify-email/:token", verifyEmail);
 router.post("/verify-email", verifyEmail);
 router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword);
+router.post("/reset-password/:token", resetPassword);
 
 module.exports = router;

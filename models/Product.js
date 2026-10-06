@@ -47,12 +47,10 @@ const ProductSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-ProductSchema.pre("save", function (next) {
+ProductSchema.pre("save", function () {
   if (!this.slug) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
-
-  next();
 });
 
 module.exports = mongoose.model("Product", ProductSchema);

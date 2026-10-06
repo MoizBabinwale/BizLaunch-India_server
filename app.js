@@ -10,6 +10,7 @@ const errorMiddleware = require("./middlewares/errorMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
 const operationsRoutes = require("./routes/operationsRoutes");
+const leadsRoutes = require("./routes/leadsRoutes");
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/leads", leadsRoutes);
 app.use("/api/businesses", businessRoutes);
 app.use("/api/businesses", operationsRoutes);
 app.use("/api/operations", operationsRoutes);

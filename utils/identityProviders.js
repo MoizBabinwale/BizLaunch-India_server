@@ -22,15 +22,15 @@ const verifyGoogleCredential = async (credential) => {
     throw error;
   }
   const profile = await response.json();
-  if (
-    profile.aud !== process.env.GOOGLE_CLIENT_ID ||
-    profile.iss !== "https://accounts.google.com" ||
-    profile.email_verified !== "true"
-  ) {
-    const error = new Error("Google account could not be verified");
-    error.statusCode = 401;
-    throw error;
-  }
+ if (
+  profile.aud !== process.env.GOOGLE_CLIENT_ID ||
+  profile.iss !== "https://accounts.google.com" ||
+  String(profile.email_verified).toLowerCase() !== "true"
+) {
+  const error = new Error("Google account could not be verified");
+  error.statusCode = 401;
+  throw error;
+}
   return {
     subject: profile.sub,
     email: String(profile.email).toLowerCase(),

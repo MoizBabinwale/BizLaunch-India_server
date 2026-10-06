@@ -318,7 +318,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Email is required");
   }
 
-  const user = await User.findOne({ email: String(email).toLowerCase() }).select("+resetPasswordTokenHash +resetPasswordExpiresAt");
+  const normalizedEmail = String(email).trim().toLowerCase();
+
+  const user = await User.findOne({
+    email: normalizedEmail,
+  }).select("+resetPasswordTokenHash +resetPasswordExpiresAt");
 
   if (!user) {
     throw new ApiError(404, "No account found for that email");
@@ -326,22 +330,64 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   const resetToken = await createPasswordResetToken(user);
 
+  // Your React frontend URL
+  const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${encodeURIComponent(
+    resetToken
+  )}`;
+
   await sendMail({
     to: user.email,
     subject: "Reset your BizLaunch India password",
-    text: `Reset your password with this token: ${resetToken}`,
-    html: `<p>Use this password reset token:</p><h2>${resetToken}</h2>`,
+
+    text: `Reset your BizLaunch India password using this link:\n\n${resetUrl}`,
+
+    html: `
+      <div>
+        <h2>Reset your BizLaunch India password</h2>
+
+        <p>Click the button below to create a new password.</p>
+
+        <p>
+          <a
+            href="${resetUrl}"
+            style="
+              display:inline-block;
+              padding:12px 20px;
+              background:#3BB149;
+              color:white;
+              text-decoration:none;
+              border-radius:6px;
+            "
+          >
+            Reset Password
+          </a>
+        </p>
+
+        <p>This link will expire shortly.</p>
+
+        <p>If you did not request a password reset, you can ignore this email.</p>
+      </div>
+    `,
   });
 
   res.status(200).json({
     success: true,
     message: "Password reset instructions sent",
-    resetToken: process.env.NODE_ENV !== "production" ? resetToken : undefined,
+
+    // Development only
+    resetToken:
+      process.env.NODE_ENV !== "production"
+        ? resetToken
+        : undefined,
   });
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
-  const { token, password } = req.body;
+  const { password } = req.body;
+  const { token } = req.params;
+
+  console.log("TOKEN FROM URL:", token);
+  console.log("PASSWORD RECEIVED:", !!password);
 
   if (!token || !password) {
     throw new ApiError(400, "Token and new password are required");
@@ -351,11 +397,22 @@ const resetPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Password must be at least 8 characters");
   }
 
-  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const tokenHash = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  console.log("CALCULATED TOKEN HASH:", tokenHash);
+
   const user = await User.findOne({
     resetPasswordTokenHash: tokenHash,
     resetPasswordExpiresAt: { $gt: Date.now() },
   }).select("+password +refreshTokenHash");
+
+  console.log(
+    "USER FOUND:",
+    user ? { id: user._id, email: user.email } : null
+  );
 
   if (!user) {
     throw new ApiError(400, "Reset token is invalid or expired");
@@ -365,6 +422,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.resetPasswordTokenHash = "";
   user.resetPasswordExpiresAt = null;
   user.refreshTokenHash = "";
+
   await user.save();
 
   res.status(200).json({

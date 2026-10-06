@@ -39,12 +39,10 @@ const ServiceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-ServiceSchema.pre("save", function (next) {
+ServiceSchema.pre("save", function () {
   if (!this.slug) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
-
-  next();
 });
 
 module.exports = mongoose.model("Service", ServiceSchema);

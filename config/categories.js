@@ -1,0 +1,38 @@
+// Central category list. The client mirrors this in client/src/config/directory.js
+// so filters, navigation and the API always agree on the same names.
+const CATEGORIES = [
+  { name: "Restaurants", slug: "restaurants", icon: "UtensilsCrossed", description: "Dine-in, take-away and catering" },
+  { name: "Hotels & Homestays", slug: "hotels-homestays", icon: "Hotel", description: "Hotels, homestays and resorts" },
+  { name: "Cafes & Coffee Shops", slug: "cafes-coffee-shops", icon: "Coffee", description: "Cafés, bakeries and coffee bars" },
+  { name: "Beauty & Salons", slug: "beauty-salons", icon: "WandSparkles", description: "Salons, parlours and spas" },
+  { name: "Doctors", slug: "doctors", icon: "Stethoscope", description: "General and specialist physicians" },
+  { name: "Hospitals", slug: "hospitals", icon: "HeartPulse", description: "Hospitals and multispeciality centres" },
+  { name: "Dentists", slug: "dentists", icon: "Smile", description: "Dental clinics and orthodontists" },
+  { name: "Education & Coaching", slug: "education-coaching", icon: "GraduationCap", description: "Schools, colleges and coaching" },
+  { name: "Home Decor", slug: "home-decor", icon: "House", description: "Furniture, lighting and interiors" },
+  { name: "Interior Designers", slug: "interior-designers", icon: "Palette", description: "Turnkey interior and design" },
+  { name: "Real Estate Agents", slug: "real-estate-agents", icon: "Landmark", description: "Buy, sell and rent property" },
+  { name: "Rent & Hire", slug: "rent-hire", icon: "Building2", description: "Equipment, vehicle and event hire" },
+  { name: "Car & Auto Services", slug: "car-auto-services", icon: "Car", description: "Garages, service centres and car care" },
+  { name: "Electricians", slug: "electricians", icon: "Zap", description: "Wiring, switches and installations" },
+  { name: "Plumbers", slug: "plumbers", icon: "Wrench", description: "Plumbing and water services" },
+  { name: "Contractors & Builders", slug: "contractors-builders", icon: "Hammer", description: "Construction and renovation" },
+  { name: "Wedding Planners", slug: "wedding-planners", icon: "Heart", description: "Wedding planning and decoration" },
+  { name: "Event Organisers", slug: "event-organisers", icon: "Calendar", description: "Events, AV and party services" },
+  { name: "PG & Hostels", slug: "pg-hostels", icon: "BedDouble", description: "Paying guests and student hostels" },
+  { name: "Gyms & Fitness", slug: "gyms-fitness", icon: "Dumbbell", description: "Gyms, yoga and personal training" },
+  { name: "Travel Agents", slug: "travel-agents", icon: "Plane", description: "Flights, hotels and holiday packages" },
+  { name: "Packers & Movers", slug: "packers-movers", icon: "Truck", description: "Shifting, storage and logistics" },
+  { name: "Electronics Stores", slug: "electronics-stores", icon: "Cpu", description: "Mobiles, TVs and appliances" },
+  { name: "Fashion Stores", slug: "fashion-stores", icon: "Shirt", description: "Clothing, footwear and boutiques" },
+  { name: "Jewellers", slug: "jewellers", icon: "Gem", description: "Gold, silver and gemstones" },
+  { name: "Insurance", slug: "insurance", icon: "ShieldCheck", description: "Life, health and general insurance" },
+  { name: "Loans & Finance", slug: "loans-finance", icon: "IndianRupee", description: "Loans, credit cards and EMI" },
+  { name: "Pet Shops", slug: "pet-shops", icon: "PawPrint", description: "Pet food, accessories and vets" },
+  { name: "Cobblers & Tailors", slug: "cobblers-tailors", icon: "Scissors", description: "Repair, alteration and stitching" },
+  { name: "Hardware Stores", slug: "hardware-stores", icon: "Store", description: "Building materials and tools" },
+  { name: "Book Stores", slug: "book-stores", icon: "BookOpen", description: "Books, stationery and textbooks" },
+  { name: "Others", slug: "others", icon: "LayoutGrid", description: "Everything else" },
+];
+
+module.exports = { CATEGORIES };
