@@ -7,6 +7,8 @@ const rateLimit = require("express-rate-limit");
 
 const notFoundMiddleware = require("./middlewares/notFoundMiddleware");
 const errorMiddleware = require("./middlewares/errorMiddleware");
+const ApiError = require("./utils/apiError");
+const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const businessRoutes = require("./routes/businessRoutes");
 const operationsRoutes = require("./routes/operationsRoutes");
@@ -36,6 +38,15 @@ app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(new ApiError(503, "Database unavailable; request could not be processed"));
+  }
+});
 
 app.use(
   "/api",

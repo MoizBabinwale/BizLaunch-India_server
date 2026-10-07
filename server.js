@@ -13,4 +13,7 @@ const startServer = async () => {
   });
 };
 
-startServer();
+startServer().catch((error) => {
+  console.error("Server startup aborted because MongoDB is unavailable:", error.message);
+  process.exitCode = 1;
+});
