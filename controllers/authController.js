@@ -15,7 +15,7 @@ const cookieBaseOptions = {
 
 const accessTokenCookieOptions = {
   ...cookieBaseOptions,
-  maxAge: 15 * 60 * 1000,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 const refreshTokenCookieOptions = {
@@ -97,11 +97,32 @@ const register = asyncHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   const verificationToken = await createVerificationToken(user);
+  const clientUrl = (process.env.CLIENT_URL || "http://localhost:3000").replace(/\/+$/, "");
+  const verificationUrl = `${clientUrl}/verify-email?token=${encodeURIComponent(
+    verificationToken
+  )}`;
   await sendMail({
     to: user.email,
     subject: "Verify your BizLaunch India account",
-    text: `Verify your email using this token: ${verificationToken}`,
-    html: `<p>Welcome to BizLaunch India.</p><p>Your verification token is:</p><h2>${verificationToken}</h2>`,
+    text: `Welcome to BizLaunch India!\n\nVerify your email address by opening this link:\n${verificationUrl}\n\nThis link expires in 24 hours. If you did not create this account, you can ignore this email.`,
+    html: `
+      <div style="margin:0;padding:36px 16px;background-color:#f3f7fb;font-family:Arial,Helvetica,sans-serif;color:#172033;">
+        <div style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #e5edf5;border-radius:16px;overflow:hidden;">
+          <div style="padding:30px 32px 20px;text-align:center;background-color:#ffffff;">
+            <img src="${clientUrl}/title-logo.png" alt="BizLaunch India" width="220" style="display:block;width:220px;max-width:100%;height:auto;margin:0 auto;" />
+          </div>
+          <div style="padding:8px 32px 36px;text-align:center;">
+            <h1 style="margin:0 0 12px;font-size:24px;line-height:1.3;color:#14213d;">Welcome to BizLaunch India!</h1>
+            <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#536176;">Confirm your email address to finish setting up your account and start growing your business.</p>
+            <a href="${verificationUrl}" style="display:inline-block;padding:14px 28px;border-radius:8px;background-color:#2563eb;color:#ffffff;font-size:16px;font-weight:bold;text-decoration:none;">Verify my email</a>
+            <p style="margin:26px 0 8px;font-size:13px;line-height:1.6;color:#66758a;">This secure link expires in 24 hours. If the button does not work, copy and paste this address into your browser:</p>
+            <p style="margin:0;word-break:break-all;font-size:13px;line-height:1.6;"><a href="${verificationUrl}" style="color:#2563eb;text-decoration:underline;">${verificationUrl}</a></p>
+            <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#66758a;">If you did not create a BizLaunch India account, you can safely ignore this email.</p>
+          </div>
+        </div>
+        <p style="margin:18px auto 0;max-width:560px;text-align:center;font-size:12px;color:#8290a3;">© BizLaunch India</p>
+      </div>
+    `,
   });
   sendAuthCookies(res, accessToken, refreshToken);
   res.status(201).json({
@@ -110,7 +131,6 @@ const register = asyncHandler(async (req, res) => {
     token: accessToken,
     refreshToken,
     user: safeUser(user),
-    verificationToken: process.env.NODE_ENV !== "production" ? verificationToken : undefined,
   });
 });
 
