@@ -24,6 +24,65 @@ const HoursSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const AppointmentSettingsSchema = new mongoose.Schema(
+  {
+    enabled: { type: Boolean, default: false },
+    workingDays: {
+      type: [String],
+      enum: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+      default: ["mon", "tue", "wed", "thu", "fri", "sat"],
+    },
+    openingTime: { type: String, default: "09:00", match: /^([01]\d|2[0-3]):[0-5]\d$/ },
+    closingTime: { type: String, default: "18:00", match: /^([01]\d|2[0-3]):[0-5]\d$/ },
+    slotDurationMinutes: { type: Number, min: 5, max: 240, default: 30 },
+    bufferMinutes: { type: Number, min: 0, max: 180, default: 0 },
+    maxBookingsPerSlot: { type: Number, min: 1, max: 20, default: 1 },
+    advanceBookingDays: { type: Number, min: 1, max: 180, default: 30 },
+    cancellationPolicy: { type: String, default: "", trim: true, maxlength: 1000 },
+    homeServiceEnabled: { type: Boolean, default: false },
+    shopAppointmentEnabled: { type: Boolean, default: true },
+    homeServiceCharge: { type: Number, min: 0, default: 0 },
+    pricePerKm: { type: Number, min: 0, default: 0 },
+    serviceRadiusKm: { type: Number, min: 0, default: 0 },
+  },
+  { _id: false }
+);
+
+const FuelRateSchema = new mongoose.Schema(
+  {
+    fuelType: { type: String, enum: ["PETROL", "DIESEL", "CNG"], required: true },
+    price: { type: Number, min: 0, required: true },
+    unit: { type: String, enum: ["LITRE", "KG"], required: true },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const EVChargerSchema = new mongoose.Schema(
+  {
+    connectorType: { type: String, required: true, trim: true, maxlength: 80 },
+    powerKw: { type: Number, min: 0, required: true },
+    quantity: { type: Number, min: 1, default: 1 },
+    available: { type: Boolean, default: true },
+  },
+  { _id: false }
+);
+
+const MarketplaceDetailsSchema = new mongoose.Schema(
+  {
+    fuelRates: { type: [FuelRateSchema], default: [] },
+    evChargers: { type: [EVChargerSchema], default: [] },
+    serviceModes: {
+      atShop: { type: Boolean, default: false },
+      homeVisit: { type: Boolean, default: false },
+    },
+    serviceRadiusKm: { type: Number, min: 0, default: 0 },
+    vehicleType: { type: String, default: "", trim: true, maxlength: 100 },
+    instantPickupRequest: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
 const BusinessSchema = new mongoose.Schema(
   {
     owner: {
@@ -56,6 +115,12 @@ const BusinessSchema = new mongoose.Schema(
       type: String,
       default: "General",
       trim: true,
+    },
+    subcategory: {
+      type: String,
+      default: "",
+      trim: true,
+      index: true,
     },
     logo: {
       type: String,
@@ -100,10 +165,19 @@ const BusinessSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    postalCode: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     area: {
       type: String,
       default: "",
       trim: true,
+    },
+    location: {
+      latitude: { type: Number, min: -90, max: 90, default: null },
+      longitude: { type: Number, min: -180, max: 180, default: null },
     },
     established: {
       type: String,
@@ -112,6 +186,14 @@ const BusinessSchema = new mongoose.Schema(
     },
     hours: {
       type: HoursSchema,
+      default: () => ({}),
+    },
+    appointmentSettings: {
+      type: AppointmentSettingsSchema,
+      default: () => ({}),
+    },
+    marketplaceDetails: {
+      type: MarketplaceDetailsSchema,
       default: () => ({}),
     },
     rating: {
@@ -123,6 +205,10 @@ const BusinessSchema = new mongoose.Schema(
     reviewCount: {
       type: Number,
       default: 0,
+    },
+    verified: {
+      type: Boolean,
+      default: false,
     },
     googleMapsUrl: {
       type: String,

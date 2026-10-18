@@ -27,6 +27,10 @@ const protect = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, "Not authorized, user not found");
   }
 
+  if ((decoded.tokenVersion || 0) !== (user.tokenVersion || 0)) {
+    throw new ApiError(401, "Not authorized, session expired");
+  }
+
   if (user.status === "suspended") {
     throw new ApiError(403, "Account suspended");
   }

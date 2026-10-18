@@ -23,6 +23,15 @@ const ServiceSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
+    category: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    images: {
+      type: [String],
+      default: [],
+    },
     price: {
       type: Number,
       default: 0,
@@ -30,6 +39,20 @@ const ServiceSchema = new mongoose.Schema(
     durationMinutes: {
       type: Number,
       default: 0,
+      min: 0,
+    },
+    homeServiceAvailable: {
+      type: Boolean,
+      default: false,
+    },
+    shopAvailable: {
+      type: Boolean,
+      default: true,
+    },
+    homeServiceCharge: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     isActive: {
       type: Boolean,
@@ -40,7 +63,7 @@ const ServiceSchema = new mongoose.Schema(
 );
 
 ServiceSchema.pre("save", function () {
-  if (!this.slug) {
+  if (this.isModified("name") || !this.slug) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
 });

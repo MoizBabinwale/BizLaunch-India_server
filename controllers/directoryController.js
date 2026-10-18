@@ -1,6 +1,7 @@
 const Business = require("../models/Business");
 const Review = require("../models/Review");
-const { CATEGORIES } = require("../config/categories");
+const Category = require("../models/Category");
+const { CATEGORIES, LEGACY_CATEGORIES } = require("../config/categories");
 const asyncHandler = require("../utils/asyncHandler");
 const ApiError = require("../utils/apiError");
 
@@ -15,19 +16,67 @@ const listCategories = asyncHandler(async (req, res) => {
   const match = { published: true };
   if (city) match.city = new RegExp(escapeRegex(city), "i");
 
-  const counts = await Business.aggregate([
-    { $match: match },
-    { $group: { _id: "$category", count: { $sum: 1 } } },
+  await Category.bulkWrite(
+    CATEGORIES.map((category, sortOrder) => ({
+      updateOne: {
+        filter: { name: category.name },
+        update: {
+          $set: { ...category, sortOrder, isActive: true },
+        },
+        upsert: true,
+      },
+    })),
+    { ordered: false }
+  );
+  await Category.bulkWrite(
+    LEGACY_CATEGORIES.map((name, index) => ({
+      updateOne: {
+        filter: { name },
+        update: {
+          $setOnInsert: {
+            name,
+            slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+            icon: "LayoutGrid",
+            description: "",
+            subcategories: [],
+            sortOrder: CATEGORIES.length + index,
+            isActive: true,
+          },
+        },
+        upsert: true,
+      },
+    })),
+    { ordered: false }
+  );
+
+  const [counts, subcategoryCounts] = await Promise.all([
+    Business.aggregate([
+      { $match: match },
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+    ]),
+    Business.aggregate([
+      { $match: match },
+      { $group: { _id: "$subcategory", count: { $sum: 1 } } },
+    ]),
   ]);
 
   const countMap = new Map(counts.map((row) => [row._id, row.count]));
+  const subcategoryCountMap = new Map(subcategoryCounts.map((row) => [row._id, row.count]));
+
+  const categories = await Category.find({ isActive: true })
+    .sort({ sortOrder: 1, name: 1 })
+    .lean();
 
   res.status(200).json({
     success: true,
-    categories: CATEGORIES.map((category) => ({
+    categories: categories.map((category) => ({
       ...category,
       count: countMap.get(category.name) || 0,
-    })).sort((a, b) => b.count - a.count),
+      subcategories: category.subcategories.map((subcategory) => ({
+        ...subcategory,
+        count: subcategoryCountMap.get(subcategory.name) || 0,
+      })),
+    })),
   });
 });
 

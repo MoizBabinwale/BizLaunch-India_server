@@ -10,6 +10,11 @@ const errorMiddleware = (err, req, res, next) => {
   if (err.name === "ValidationError") {
     statusCode = 400;
     message = Object.values(err.errors).map((error) => error.message).join(", ");
+  } else if (err.name === "MulterError") {
+    statusCode = err.code === "LIMIT_FILE_SIZE" ? 413 : 400;
+    message = err.code === "LIMIT_FILE_SIZE"
+      ? "Each photo must be 5 MB or smaller."
+      : "The selected photo could not be processed.";
   } else if (err.name === "CastError") {
     statusCode = 400;
     message = `Invalid ${err.path}`;

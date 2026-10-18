@@ -246,10 +246,31 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
 const logout = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies?.refreshToken;
+  let sessionRevoked = false;
 
   if (refreshToken) {
     const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
-    await User.updateOne({ refreshTokenHash }, { $set: { refreshTokenHash: "" } });
+    const result = await User.updateOne(
+      { refreshTokenHash },
+      { $set: { refreshTokenHash: "" }, $inc: { tokenVersion: 1 } }
+    );
+    sessionRevoked = result.matchedCount > 0;
+  }
+
+  if (!sessionRevoked) {
+    const authorization = req.headers.authorization || "";
+    const accessToken = authorization.startsWith("Bearer ")
+      ? authorization.slice(7)
+      : req.cookies?.accessToken;
+
+    if (accessToken) {
+      try {
+        const decoded = jwt.verify(accessToken, process.env.JWT_SECRET);
+        await User.updateOne({ _id: decoded.id }, { $inc: { tokenVersion: 1 } });
+      } catch (error) {
+        if (!(error instanceof jwt.JsonWebTokenError)) throw error;
+      }
+    }
   }
 
   res.clearCookie("accessToken", cookieBaseOptions);
@@ -406,9 +427,6 @@ const resetPassword = asyncHandler(async (req, res) => {
   const { password } = req.body;
   const { token } = req.params;
 
-  console.log("TOKEN FROM URL:", token);
-  console.log("PASSWORD RECEIVED:", !!password);
-
   if (!token || !password) {
     throw new ApiError(400, "Token and new password are required");
   }
@@ -422,17 +440,10 @@ const resetPassword = asyncHandler(async (req, res) => {
     .update(token)
     .digest("hex");
 
-  console.log("CALCULATED TOKEN HASH:", tokenHash);
-
   const user = await User.findOne({
     resetPasswordTokenHash: tokenHash,
     resetPasswordExpiresAt: { $gt: Date.now() },
   }).select("+password +refreshTokenHash");
-
-  console.log(
-    "USER FOUND:",
-    user ? { id: user._id, email: user.email } : null
-  );
 
   if (!user) {
     throw new ApiError(400, "Reset token is invalid or expired");
@@ -442,6 +453,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.resetPasswordTokenHash = "";
   user.resetPasswordExpiresAt = null;
   user.refreshTokenHash = "";
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
 
   await user.save();
 
